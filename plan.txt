@@ -1,3 +1,10 @@
+
+
+
+
+
+NOTES ************************************************************************
+
 shell greedily based on: 
 	1. avoid a bump when you can, 
 	2. lexicographically take the largest number

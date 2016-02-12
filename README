@@ -1,1 +1,5 @@
 GIT repository for csci485/Lab3
+
+test the heap:
+> make heap
+> ./heap
