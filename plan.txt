@@ -1,0 +1,54 @@
+shell greedily based on: 
+	1. avoid a bump when you can, 
+	2. lexicographically take the largest number
+
+add a buffer to add available elements to the heap for shelling one step later
+
+// PSEUDOCODE V1
+
+int count = size(p);
+int lex = 0;
+element last;
+
+while (count > 0) {
+	for (n in P) {
+		if (n.uc.length == 0) {
+			n.lex = lex;
+			-- count;
+			for (k in n.lc) {
+				k.ul.push(lex)
+				if (!k.touched) -- count;
+				k.touched = true;
+				if (k.ul.length == k.uc.length) {
+					ready.insert(k);
+				}
+			}
+		}
+	}
+}
+
+while (ready.length > 0) {
+	n = ready.removeMin();
+	if (last && last.ul == n.ul)
+		n.lex = lex;
+	else
+		n.lex = ++ lex;
+	last = n;
+}
+
+//PSEUDOCODE V2
+
+struct element {
+	bool touched = false;
+	std::vector<int> ul;
+	std::vector<*element> uc;
+	std::vector<*element> lc;
+}
+
+
+
+
+
+
+
+
