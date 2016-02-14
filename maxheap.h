@@ -1,16 +1,16 @@
 /****************************************************************
-/*            heap.h
-/*            by Gara Pruesse
-/*            Nov 26, 2015
-/*            Altered Jan 20, 2016 to be a Max-Heap
-/*            (for 485 poset application)
-/*
-/*            class for heap
-/*            
-/*********************************************************************/
+*            heap.h
+*            by Gara Pruesse
+*            Nov 26, 2015
+*            Altered Jan 20, 2016 to be a Max-Heap
+*            (for 485 poset application)
+*
+*            class for heap
+*            
+*********************************************************************/
 #include <string>
 #include <iostream>
-#include <values.h>
+// #include <values.h>
 
 // heap items are vertex name (int) and key value (int)
 // heap is a max-heap, array based implementation

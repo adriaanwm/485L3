@@ -18,7 +18,7 @@
  * if usedPriorities[i] = 0 then i might be returned, else i will not
  * be returned)
  */
-int randInt(int range, int usedPriorities[]);
+int randInt(int range, vector<int> usedPriorities);
 
 // see specification at http://csciun1.mala.bc.ca:8080/~gpruesse/teaching/485/labs/2.posetCoverHeap.html
 int bump(char *fn);
@@ -41,7 +41,7 @@ int bump(char *fn) {
    ifstream f;
    int v;
 	int u;
-	int n;
+	int n = 0;
    
    f.open(fn);
 
@@ -53,8 +53,11 @@ int bump(char *fn) {
    f >> n;   
 	 
 	// keep track of how many elements are in the lower cover of each element
-	int lowerCounts[n] = {0};
-   vector<int> *upperCover = new vector<int>[n];  
+	// int lowerCounts[n] = {0};
+	
+	// TODO check this...
+	vector<int> lowerCounts (n, 0);
+	vector<int> *upperCover = new vector<int>[n];  
 	maxheap maxHeap(n);
 	int list[n][2];
 
@@ -74,7 +77,9 @@ int bump(char *fn) {
    }
 
 	int remainingNodes = n;
-	int usedPriorities[2*n] = {0};
+	// int usedPriorities[2*n] = {0};
+	vector<int> usedPriorities (2*n, 0);
+	// int *usedPriorities = new array(0)[2*n];
 	int upperNode;
 	int vertex;
 	int key;
@@ -125,9 +130,10 @@ int bump(char *fn) {
 
 	f.close();	
 
+	return 0;
 }
 
-int randInt(int range, int usedPriorities[]) {
+int randInt(int range, vector<int> usedPriorities) {
 	int num;
 	
 	// initalize random number
