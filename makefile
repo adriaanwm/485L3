@@ -10,3 +10,8 @@ heap: heap.o
 heap.o: heap.cpp
 	g++ -c heap.cpp
 
+bump:	bump.o heap.o
+	g++ -o bump bump.o heap.o
+
+bump.o:	heap.h bump.cpp
+	g++ -c bump.cpp
