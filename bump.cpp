@@ -10,7 +10,7 @@
 #include <fstream>
 #include <stdlib.h>
 #include <time.h>
-#include "heap.h"
+#include "maxheap.h"
 
 /** 
  * generates a random integer from 0-range that has not already been 
@@ -55,7 +55,7 @@ int bump(char *fn) {
 	// keep track of how many elements are in the lower cover of each element
 	int lowerCounts[n] = {0};
    vector<int> *upperCover = new vector<int>[n];  
-	heap maxHeap(n);
+	maxheap maxHeap(n);
 	int list[n][2];
 
    if (n>100000) { cerr<<"n too large: "<<n<<endl; return 0;} // arbitrary

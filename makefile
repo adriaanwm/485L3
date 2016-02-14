@@ -1,3 +1,5 @@
+all: sort heap bump
+
 sort: sort.o 
 	g++ -o sort sort.o
 
@@ -10,8 +12,8 @@ heap: heap.o
 heap.o: heap.cpp
 	g++ -c heap.cpp
 
-bump:	bump.o heap.o
-	g++ -o bump bump.o heap.o
+bump:	bump.o maxheap.o
+	g++ -o bump bump.o maxheap.o
 
-bump.o:	heap.h bump.cpp
+bump.o:	maxheap.h bump.cpp
 	g++ -c bump.cpp
