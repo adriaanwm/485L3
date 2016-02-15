@@ -17,3 +17,9 @@ bump:	bump.o maxheap.o
 
 bump.o:	maxheap.h bump.cpp
 	g++ -c bump.cpp
+
+quicktest: quicktest.o
+	g++ -o quicktest quicktest.o
+
+quicktest.o: quicktest.cpp
+	g++ -c quicktest.cpp

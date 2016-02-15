@@ -5,12 +5,67 @@
  * student number: 575148838
  */
 
+#include <queue>
 #include <iostream>
 #include <vector>
 #include <fstream>
 #include <stdlib.h>
 #include <time.h>
 #include "maxheap.h"
+
+using namespace std;
+
+struct element {
+	element() : touched(false) {}
+	vector<int> upperLex;
+	vector<int> upperCover;
+	vector<int> lowerCover;
+	int lowerCounts;
+	bool touched;
+	int key;
+	int lex;
+};
+
+struct comparator {
+	bool operator()(element *le, element *re) {
+		bool lhsLarger = true;
+		bool rhsLarger = false;
+		bool eq = true;
+		int lhsLex;
+		int rhsLex;
+
+		for (int i = 0; i < le->upperLex.size(); i++) {
+			lhsLex = le->upperLex[i];
+			if (re->upperLex.size() < i) return lhsLarger;
+			rhsLex = re->upperLex[i];
+
+			if (lhsLex > rhsLex) return lhsLarger;
+			if (lhsLex < rhsLex) return rhsLarger;
+		}
+
+		if (re->upperLex.empty()) return eq;
+
+		return rhsLarger;
+
+
+		// while (true) {
+    //
+		// 	// if any are empty
+		// 	if (le.upperLex.empty() && re.upperLex.empty()) return eq;
+		// 	if (le.upperLex.empty()) return rhsLarger;
+		// 	if (re.upperLex.empty()) return lhsLarger;
+    //
+		// 	// if none are empty
+		// 	lhsLex = le.upperLex.back(); le.upperLex.pop_back();	
+		// 	rhsLex = re.upperLex.back(); re.upperLex.pop_back();
+		// 	if (lhsLex > rhsLex) return lhsLarger;
+		// 	if (lhsLex < rhsLex) return rhsLarger;
+		// 	
+		// }	
+	}
+};
+
+void lexLabel(int n, vector<element> *elements); 
 
 /** 
  * generates a random integer from 0-range that has not already been 
@@ -20,10 +75,12 @@
  */
 int randInt(int range, vector<int> usedPriorities);
 
+void dump(vector<element> elements);
+void dump(element e);
+void dump(vector<int> v);
+
 // see specification at http://csciun1.mala.bc.ca:8080/~gpruesse/teaching/485/labs/2.posetCoverHeap.html
 int bump(char *fn);
-
-using namespace std;
 
 int main(int argc, char *argv[]) {
 
@@ -38,15 +95,15 @@ int main(int argc, char *argv[]) {
 }
 
 int bump(char *fn) {
-   ifstream f;
-   int v;
+	ifstream f;
+	int v;
 	int u;
 	int n = 0;
    
-   f.open(fn);
+	f.open(fn);
 
-   if (!f) {
-      cerr<<"File not openable. "<<endl; 
+	if (!f) {
+		cerr<<"File not openable. "<<endl; 
 		return 0;
 	}
       
@@ -56,33 +113,49 @@ int bump(char *fn) {
 	// int lowerCounts[n] = {0};
 	
 	// TODO check this...
-	vector<int> lowerCounts (n, 0);
-	vector<int> *upperCover = new vector<int>[n];  
+	// vector<int> lowerCounts (n, 0);
+	// vector<int> *upperCover = new vector<int>[n];  
+	vector<element> elements;
+	for (int i = 0; i < n; i++) {
+		element e;
+		e.key = i;
+		elements.push_back(e);
+	}
+
+
 	maxheap maxHeap(n);
+
 	int list[n][2];
 
-   if (n>100000) { cerr<<"n too large: "<<n<<endl; return 0;} // arbitrary
+	if (n>100000) { cerr<<"n too large: "<<n<<endl; return 0;} // arbitrary
 
-   f >> u;
+	f >> u;
 
-   while (u<n && f) {
-	   f >> v; 
-	   while (v < n && f) {
-		   upperCover[u].push_back(v);
-			// lowerCover[v].push_back(u); // Added for lex labeling
-		   lowerCounts[v] = lowerCounts[v] + 1;
-		   f >> v;
-		 }
-	   f >> u;
-   }
+	while (u<n && f) {
+		f >> v; 
+		element *e = &elements[u];
+		while (v < n && f) {
+			e->upperCover.push_back(v);
+			elements[v].lowerCover.push_back(u);
+			e->lowerCounts ++;
+			
+			f >> v;
+		}
+		f >> u;
+	}
+	
 
-	int remainingNodes = n;
-	// int usedPriorities[2*n] = {0};
-	vector<int> usedPriorities (2*n, 0);
-	// int *usedPriorities = new array(0)[2*n];
-	int upperNode;
-	int vertex;
-	int key;
+	lexLabel(n, &elements);
+
+	dump(elements);
+
+	// int remainingNodes = n;
+	// // int usedPriorities[2*n] = {0};
+	// vector<int> usedPriorities (2*n, 0);
+	// // int *usedPriorities = new array(0)[2*n];
+	// int upperNode;
+	// int vertex;
+	// int key;
 
 	/** 
 	* any elements with no elements in their lower covers are eligible to be
@@ -90,10 +163,10 @@ int bump(char *fn) {
 	* these elements in a max heap to find which element should be added
 	* next (first).
 	*/
-	for (int i=0; i<n; i++) {
-		if (lowerCounts[i] == 0) 
-			maxHeap.insert(randInt(2*n, usedPriorities), i);
-	}
+	// for (int i=0; i<n; i++) {
+	// 	if (lowerCounts[i] == 0) 
+	// 		maxHeap.insert(randInt(2*n, usedPriorities), i);
+	// }
 
 	/** 
 	* All eligible elements to be added to the linear extension are now in
@@ -105,28 +178,28 @@ int bump(char *fn) {
 	*	  them to the max heap as well
 	*	- repeat this until all the nodes are in the linear extension
 	*/
-	while (remainingNodes > 0) {
-		vertex = maxHeap.maxVertex();
-		key = maxHeap.maxKey();
-		list[n-remainingNodes][0] = vertex;
-		list[n-remainingNodes][1] = key;
-		maxHeap.deleteMax();
-		remainingNodes --;
-		while (upperCover[vertex].size() > 0) {
-			upperNode = upperCover[vertex].back();
-			upperCover[vertex].pop_back();
-			if (lowerCounts[upperNode] != 1) {
-				 lowerCounts[upperNode] = lowerCounts[upperNode] - 1;
-			} else {
-				 maxHeap.insert(randInt(2*n, usedPriorities), upperNode);
-			}
-		 }
-	};
-
-	// print the linear extension
-	cout << "linear extension (top first)" << endl;
-	for (int i = 0; i < n; i ++) 
-		cout << "value " << list[i][0] << " priority " << list[i][1] << endl;
+	// while (remainingNodes > 0) {
+	// 	vertex = maxHeap.maxVertex();
+	// 	key = maxHeap.maxKey();
+	// 	list[n-remainingNodes][0] = vertex;
+	// 	list[n-remainingNodes][1] = key;
+	// 	maxHeap.deleteMax();
+	// 	remainingNodes --;
+	// 	while (upperCover[vertex].size() > 0) {
+	// 		upperNode = upperCover[vertex].back();
+	// 		upperCover[vertex].pop_back();
+	// 		if (lowerCounts[upperNode] != 1) {
+	// 			 lowerCounts[upperNode] = lowerCounts[upperNode] - 1;
+	// 		} else {
+	// 			 maxHeap.insert(randInt(2*n, usedPriorities), upperNode);
+	// 		}
+	// 	 }
+	// };
+  //
+	// // print the linear extension
+	// cout << "linear extension (top first)" << endl;
+	// for (int i = 0; i < n; i ++) 
+	// 	cout << "value " << list[i][0] << " priority " << list[i][1] << endl;
 
 	f.close();	
 
@@ -146,3 +219,66 @@ int randInt(int range, vector<int> usedPriorities) {
 	usedPriorities[num] = 1;
 	return num;
 }
+
+void lexLabel(int n, vector<element> *elements) {
+	// priority_queue<std::vector<int>, std::vector<std::vector<int> > , comparator> ready;
+	priority_queue<element*, std::vector<element*>, comparator> ready;
+
+	int count = n;
+	int last = -1;
+	int lex = 0;
+
+	for (int i = 0; i < n; i++) {
+		element *e = &(*elements)[i];
+		if (e->upperCover.size() == 0) {
+			e->lex = lex;
+			count --;
+
+			// cycle through lower cover
+			for (std::vector<int>::iterator it = e->lowerCover.begin(); 
+					 it != e->lowerCover.end(); ++it) {
+				element *e2 = &(*elements)[*it];
+				e2->upperLex.push_back(e->key);
+				if (!e2->touched) {
+					e2->touched = true;
+					count --;
+				}
+				if (e2->upperLex.size() == e2->upperCover.size()) ready.push(e2);
+			}
+			if (count == 0) break;
+		}
+	}
+
+	while (ready.size() > 0) {
+		element *e = ready.top(); ready.pop();
+
+		// custom equals?
+		if (last >= 0 && (*elements)[last].upperLex == e->upperLex)
+			e->lex = lex;
+		else
+			e->lex = ++lex;
+		last = e->key;
+	}
+
+}	
+
+void dump(vector<int> v) {
+	for (std::vector<int>::const_iterator i = v.begin(); i != v.end(); ++i)
+		cout << *i << " " ;
+}
+
+void dump(element e) {
+	cout << "key: " << e.key << endl;
+	cout << "upperCover: "; dump(e.upperCover); cout << endl;
+	cout << "lowerCover: "; dump(e.lowerCover); cout  << endl;
+	cout << "lex: " << e.lex << endl;
+}
+
+void dump(vector<element> elements) {
+	for (std::vector<element>::const_iterator i = elements.begin(); i != elements.end(); ++i)
+		dump(*i);
+}
+
+
+
+
