@@ -11,24 +11,11 @@
 #include <fstream>
 #include <stdlib.h>
 #include <time.h>
+
 #include "maxheap.h"
+#include "element.h"
 
 using namespace std;
-
-struct element {
-	element() : touched(false), lowerCounts(0) {}
-	vector<int> upperLex;
-	vector<int> upperCover;
-	vector<int> lowerCover;
-	int lowerCounts;
-	bool touched;
-	int key;
-	int lex;
-};
-
-void dump(vector<element> elements);
-void dump(element e);
-void dump(vector<int> v);
 
 struct comparator {
 	bool operator()(element *le, element *re) {
@@ -37,11 +24,6 @@ struct comparator {
 		bool eq = true;
 		int lhsLex;
 		int rhsLex;
-
-		// cout << "left: " << endl;
-		// dump(*le);
-		// cout << "right: " << endl;
-		// dump(*re);
 
 		for (int i = 0; i < le->upperLex.size(); i++) {
 			lhsLex = le->upperLex[i];
@@ -55,38 +37,15 @@ struct comparator {
 		if (re->upperLex.empty()) return eq;
 
 		return rhsLarger;
-
-
-		// while (true) {
-    //
-		// 	// if any are empty
-		// 	if (le.upperLex.empty() && re.upperLex.empty()) return eq;
-		// 	if (le.upperLex.empty()) return rhsLarger;
-		// 	if (re.upperLex.empty()) return lhsLarger;
-    //
-		// 	// if none are empty
-		// 	lhsLex = le.upperLex.back(); le.upperLex.pop_back();	
-		// 	rhsLex = re.upperLex.back(); re.upperLex.pop_back();
-		// 	if (lhsLex > rhsLex) return lhsLarger;
-		// 	if (lhsLex < rhsLex) return rhsLarger;
-		// 	
-		// }	
 	}
 };
 
-void lexLabel(int n, vector<element> *elements); 
+void lexLabel(vector<element> *elements); 
 
-/** 
- * generates a random integer from 0-range that has not already been 
- * given by the function (as kept track by usedPriorities array,
- * if usedPriorities[i] = 0 then i might be returned, else i will not
- * be returned)
- */
-// int randInt(int range, vector<int> usedPriorities);
-
+bool getPosetInfo(char *fn, vector<element> *elements);
 
 // see specification at http://csciun1.mala.bc.ca:8080/~gpruesse/teaching/485/labs/2.posetCoverHeap.html
-int bump(char *fn);
+int bump(vector<element> *elements);
 
 int main(int argc, char *argv[]) {
 
@@ -95,65 +54,19 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
-  bump(argv[1]); 	
+	vector<element> elements;
+	
+	if (!getPosetInfo(argv[1], &elements)) { return 0; }
+	lexLabel(&elements);
+  bump(&elements); 	
+
 
   return 0;
 }
 
-int bump(char *fn) {
-	ifstream f;
-	int v;
-	int u;
-	int n = 0;
-   
-	f.open(fn);
-
-	if (!f) {
-		cerr<<"File not openable. "<<endl; 
-		return 0;
-	}
-      
-   f >> n;   
-	 
-	// keep track of how many elements are in the lower cover of each element
-	// int lowerCounts[n] = {0};
-	
-	// TODO check this...
-	// vector<int> lowerCounts (n, 0);
-	// vector<int> *upperCover = new vector<int>[n];  
-	vector<element> elements;
-	for (int i = 0; i < n; i++) {
-		element e;
-		e.key = i;
-		elements.push_back(e);
-	}
-
-
-	maxheap maxHeap(n);
-
-	int list[n][2];
-
-	if (n>100000) { cerr<<"n too large: "<<n<<endl; return 0;} // arbitrary
-
-	f >> u;
-
-	while (u<n && f) {
-		f >> v; 
-		element *e = &elements[u];
-		while (v < n && f) {
-			e->upperCover.push_back(v);
-			elements[v].lowerCover.push_back(u);
-			elements[v].lowerCounts ++;
-			
-			f >> v;
-		}
-		f >> u;
-	}
-	
-
-	lexLabel(n, &elements);
-
-	dump(elements);
+int bump(vector<element> *els) {
+	vector<element> elements = *els;
+	int n = elements.size();
 
 	int remainingNodes = n;
 	int upperNode;
@@ -167,12 +80,12 @@ int bump(char *fn) {
 	* these elements in a max heap to find which element should be added
 	* next (first).
 	*/
+	maxheap maxHeap(n);
 	for (int i=0; i<n; i++) {
 		if (elements[i].lowerCounts == 0) 
 			maxHeap.insert(elements[i].lex, i);
 	}
 
-	maxHeap.print_heap();
 
 	/** 
 	* All eligible elements to be added to the linear extension are now in
@@ -184,16 +97,23 @@ int bump(char *fn) {
 	*	  them to the max heap as well
 	*	- repeat this until all the nodes are in the linear extension
 	*/
+	int list[n][2];
+	int bumps = 0;
 	while (remainingNodes > 0) {
 		if (maxHeap.empty()) {
+			bumps ++;
+			cout << "--";
 			while (!buf.empty()) {
 				maxHeap.insert(elements[buf.back()].lex, buf.back());
 				buf.pop_back();
 			}
+		} else {
+			cout << " ";
 		}
 
 		vertex = maxHeap.maxVertex();
 		key = maxHeap.maxKey();
+		cout << vertex << " (" << key << ")";
 		list[n-remainingNodes][0] = vertex;
 		list[n-remainingNodes][1] = key;
 		maxHeap.deleteMax();
@@ -211,33 +131,21 @@ int bump(char *fn) {
 				elements[upperNode].lowerCounts --;
 		}
 	};
+
+	cout << " [" << bumps << " bump(s)]" << endl;
   //
 	// // print the linear extension
-	cout << "linear extension (top first)" << endl;
-	for (int i = 0; i < n; i ++) 
-		cout << "value " << list[i][0] << " priority " << list[i][1] << endl;
+	// cout << "linear extension (top first)" << endl;
+	// for (int i = 0; i < n; i ++) 
+	// 	cout << list[i][0] << "(" << list[i][1] << ")" << endl;
+		// cout << "value " << list[i][0] << " priority " << list[i][1] << endl;
 
-	f.close();	
 
 	return 0;
 }
 
-// int randInt(int range, vector<int> usedPriorities) {
-// 	int num;
-// 	
-// 	// initalize random number
-// 	srand(time(NULL));
-//
-// 	do {
-// 		num = rand() % range;
-// 	} while (usedPriorities[num] == 1);
-//
-// 	usedPriorities[num] = 1;
-// 	return num;
-// }
-
-void lexLabel(int n, vector<element> *elements) {
-	// priority_queue<std::vector<int>, std::vector<std::vector<int> > , comparator> ready;
+void lexLabel(vector<element> *elements) {
+	int n = elements->size();
 	priority_queue<element*, std::vector<element*>, comparator> ready;
 
 	int count = n;
@@ -291,25 +199,49 @@ void lexLabel(int n, vector<element> *elements) {
 
 }	
 
-void dump(vector<int> v) {
-	for (std::vector<int>::const_iterator i = v.begin(); i != v.end(); ++i)
-		cout << *i << " " ;
+bool getPosetInfo(char *fn, vector<element> *elements) {
+	ifstream f;
+	int v;
+	int u;
+	int n = 0;
+
+	f.open(fn);
+
+	if (!f) {
+		cout << "File not openable. \n";
+		return false;
+	}
+
+  f >> n;   
+
+	// TODO look for a quicker way
+	for (int i = 0; i < n; i++) {
+		element e;
+		e.key = i;
+		(*elements).push_back(e);
+	}
+
+
+	if (n>100000) {
+		cout << "n too large" << endl;
+		return false;
+	}
+
+	f >> u;
+
+	while (u<n && f) {
+		f >> v; 
+		element *e = &(*elements)[u];
+		while (v < n && f) {
+			e->upperCover.push_back(v);
+			(*elements)[v].lowerCover.push_back(u);
+			(*elements)[v].lowerCounts ++;
+
+			f >> v;
+		}
+		f >> u;
+	}
+
+	f.close();	
+	return true;
 }
-
-void dump(element e) {
-	cout << "key: " << e.key << endl;
-	cout << "lex: " << e.lex << endl;
-	cout << "upperCover: "; dump(e.upperCover); cout << endl;
-	cout << "lowerCover: "; dump(e.lowerCover); cout  << endl;
-	cout << "lowerCounts: "<< e.lowerCounts  << endl;
-	cout << "upperLex: "; dump(e.upperLex); cout  << endl << endl;
-}
-
-void dump(vector<element> elements) {
-	for (std::vector<element>::const_iterator i = elements.begin(); i != elements.end(); ++i)
-		dump(*i);
-}
-
-
-
-

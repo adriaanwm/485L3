@@ -1,12 +1,12 @@
 /****************************************************************
-/*            heap.cpp
-/*            by Gara Pruesse
-/*            Oct 30, 2014
-/*
-/*            reads a heap in from a file
-/*            builds heap, provides heap access routines
-/*            
-/*********************************************************************/
+*            heap.cpp
+*            by Gara Pruesse
+*            Oct 30, 2014
+*
+*            reads a heap in from a file
+*            builds heap, provides heap access routines
+*            
+*********************************************************************/
 
 #include <climits>
 #include "maxheap.h"
@@ -107,7 +107,7 @@ int maxheap::insert(int k, int v)
       vertexparent = heapArray[p];
    }
 
-
+	return 0;
 }
 
 int maxheap::deleteMax()
