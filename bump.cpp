@@ -159,6 +159,7 @@ int bump(char *fn) {
 	int upperNode;
 	int vertex;
 	int key;
+	vector<int> buf;
 
 	/** 
 	* any elements with no elements in their lower covers are eligible to be
@@ -184,24 +185,31 @@ int bump(char *fn) {
 	*	- repeat this until all the nodes are in the linear extension
 	*/
 	while (remainingNodes > 0) {
+		if (maxHeap.empty()) {
+			while (!buf.empty()) {
+				maxHeap.insert(elements[buf.back()].lex, buf.back());
+				buf.pop_back();
+			}
+		}
+
 		vertex = maxHeap.maxVertex();
 		key = maxHeap.maxKey();
 		list[n-remainingNodes][0] = vertex;
 		list[n-remainingNodes][1] = key;
 		maxHeap.deleteMax();
 		remainingNodes --;
+		while (!buf.empty()) {
+			maxHeap.insert(elements[buf.back()].lex, buf.back());
+			buf.pop_back();
+		}
 		while (elements[vertex].upperCover.size() > 0) {
 			upperNode = elements[vertex].upperCover.back();
 			elements[vertex].upperCover.pop_back();
-			if (elements[upperNode].lowerCounts == 1) {
-				maxHeap.insert(elements[upperNode].lex, upperNode);
-			} else {
-				cout << "here" << endl;
+			if (elements[upperNode].lowerCounts == 1)
+				buf.push_back(upperNode);
+			else 
 				elements[upperNode].lowerCounts --;
-				cout << elements[upperNode].lowerCounts << endl;
-			}
-			maxHeap.print_heap();
-		 }
+		}
 	};
   //
 	// // print the linear extension
