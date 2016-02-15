@@ -1,48 +1,22 @@
 /**
  * course: CSCI 485
- * date: January 28, 2016
+ * date: February 14, 2016
  * student name: Adriaan Mulder
  * student number: 575148838
  */
 
-#include <queue>
 #include <iostream>
 #include <vector>
-#include <fstream>
 #include <stdlib.h>
 #include <time.h>
 
 #include "maxheap.h"
 #include "element.h"
+#include "lexlabel.h"
+#include "parse_poset_file.h"
 
 using namespace std;
 
-struct comparator {
-	bool operator()(element *le, element *re) {
-		bool lhsLarger = true;
-		bool rhsLarger = false;
-		bool eq = true;
-		int lhsLex;
-		int rhsLex;
-
-		for (int i = 0; i < le->upperLex.size(); i++) {
-			lhsLex = le->upperLex[i];
-			if (re->upperLex.size() < i) return lhsLarger;
-			rhsLex = re->upperLex[i];
-
-			if (lhsLex > rhsLex) return lhsLarger;
-			if (lhsLex < rhsLex) return rhsLarger;
-		}
-
-		if (re->upperLex.empty()) return eq;
-
-		return rhsLarger;
-	}
-};
-
-void lexLabel(vector<element> *elements); 
-
-bool getPosetInfo(char *fn, vector<element> *elements);
 
 // see specification at http://csciun1.mala.bc.ca:8080/~gpruesse/teaching/485/labs/2.posetCoverHeap.html
 int bump(vector<element> *elements);
@@ -144,104 +118,4 @@ int bump(vector<element> *els) {
 	return 0;
 }
 
-void lexLabel(vector<element> *elements) {
-	int n = elements->size();
-	priority_queue<element*, std::vector<element*>, comparator> ready;
 
-	int count = n;
-	int last = -1;
-	int lex = 0;
-
-	for (int i = 0; i < n; i++) {
-		element *e = &(*elements)[i];
-		if (e->upperCover.size() == 0) {
-			e->lex = lex;
-			count --;
-
-			// cycle through lower cover
-			for (std::vector<int>::iterator it = e->lowerCover.begin(); 
-					 it != e->lowerCover.end(); ++it) {
-				element *e2 = &(*elements)[*it];
-				e2->upperLex.insert(e2->upperLex.begin(), e->key);
-				if (!e2->touched) {
-					e2->touched = true;
-					count --;
-				}
-				if (e2->upperLex.size() == e2->upperCover.size()) ready.push(e2);
-			}
-			if (count == 0) break;
-		}
-	}
-
-	while (ready.size() > 0) {
-		element *e = ready.top(); ready.pop();
-
-		// custom equals?
-		if (last >= 0 && (*elements)[last].upperLex == e->upperLex)
-			e->lex = lex;
-		else
-			e->lex = ++lex;
-		last = e->key;
-
-		// cycle through lower cover
-		for (std::vector<int>::iterator it = e->lowerCover.begin(); 
-				 it != e->lowerCover.end(); ++it) {
-			element *e2 = &(*elements)[*it];
-			e2->upperLex.insert(e2->upperLex.begin(), e->key);
-			if (!e2->touched) {
-				e2->touched = true;
-				count --;
-			}
-			if (e2->upperLex.size() == e2->upperCover.size()) ready.push(e2);
-		}
-
-	}
-
-}	
-
-bool getPosetInfo(char *fn, vector<element> *elements) {
-	ifstream f;
-	int v;
-	int u;
-	int n = 0;
-
-	f.open(fn);
-
-	if (!f) {
-		cout << "File not openable. \n";
-		return false;
-	}
-
-  f >> n;   
-
-	// TODO look for a quicker way
-	for (int i = 0; i < n; i++) {
-		element e;
-		e.key = i;
-		(*elements).push_back(e);
-	}
-
-
-	if (n>100000) {
-		cout << "n too large" << endl;
-		return false;
-	}
-
-	f >> u;
-
-	while (u<n && f) {
-		f >> v; 
-		element *e = &(*elements)[u];
-		while (v < n && f) {
-			e->upperCover.push_back(v);
-			(*elements)[v].lowerCover.push_back(u);
-			(*elements)[v].lowerCounts ++;
-
-			f >> v;
-		}
-		f >> u;
-	}
-
-	f.close();	
-	return true;
-}
