@@ -26,6 +26,10 @@ struct element {
 	int lex;
 };
 
+void dump(vector<element> elements);
+void dump(element e);
+void dump(vector<int> v);
+
 struct comparator {
 	bool operator()(element *le, element *re) {
 		bool lhsLarger = true;
@@ -33,6 +37,11 @@ struct comparator {
 		bool eq = true;
 		int lhsLex;
 		int rhsLex;
+
+		cout << "left: " << endl;
+		dump(*le);
+		cout << "right: " << endl;
+		dump(*re);
 
 		for (int i = 0; i < le->upperLex.size(); i++) {
 			lhsLex = le->upperLex[i];
@@ -75,9 +84,6 @@ void lexLabel(int n, vector<element> *elements);
  */
 int randInt(int range, vector<int> usedPriorities);
 
-void dump(vector<element> elements);
-void dump(element e);
-void dump(vector<int> v);
 
 // see specification at http://csciun1.mala.bc.ca:8080/~gpruesse/teaching/485/labs/2.posetCoverHeap.html
 int bump(char *fn);
@@ -238,7 +244,7 @@ void lexLabel(int n, vector<element> *elements) {
 			for (std::vector<int>::iterator it = e->lowerCover.begin(); 
 					 it != e->lowerCover.end(); ++it) {
 				element *e2 = &(*elements)[*it];
-				e2->upperLex.push_back(e->key);
+				e2->upperLex.insert(e2->upperLex.begin(), e->key);
 				if (!e2->touched) {
 					e2->touched = true;
 					count --;
@@ -258,6 +264,19 @@ void lexLabel(int n, vector<element> *elements) {
 		else
 			e->lex = ++lex;
 		last = e->key;
+
+		// cycle through lower cover
+		for (std::vector<int>::iterator it = e->lowerCover.begin(); 
+				 it != e->lowerCover.end(); ++it) {
+			element *e2 = &(*elements)[*it];
+			e2->upperLex.insert(e2->upperLex.begin(), e->key);
+			if (!e2->touched) {
+				e2->touched = true;
+				count --;
+			}
+			if (e2->upperLex.size() == e2->upperCover.size()) ready.push(e2);
+		}
+
 	}
 
 }	
@@ -269,9 +288,10 @@ void dump(vector<int> v) {
 
 void dump(element e) {
 	cout << "key: " << e.key << endl;
+	cout << "lex: " << e.lex << endl;
 	cout << "upperCover: "; dump(e.upperCover); cout << endl;
 	cout << "lowerCover: "; dump(e.lowerCover); cout  << endl;
-	cout << "lex: " << e.lex << endl;
+	cout << "upperLex: "; dump(e.upperLex); cout  << endl << endl;
 }
 
 void dump(vector<element> elements) {
