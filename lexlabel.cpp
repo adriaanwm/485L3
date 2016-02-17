@@ -16,9 +16,9 @@ void lexLabel(vector<element> *elements) {
 
 			// cycle through lower cover
 			for (std::vector<int>::iterator it = e->lowerCover.begin(); 
-					 it != e->lowerCover.end(); ++it) {
+					 it != e->lowerCover.end(); ++ it) {
 				element *e2 = &(*elements)[*it];
-				e2->upperLex.insert(e2->upperLex.begin(), e->key);
+				e2->upperLex.insert(e2->upperLex.begin(), e->lex);
 				if (!e2->touched) {
 					e2->touched = true;
 					count --;
@@ -43,7 +43,7 @@ void lexLabel(vector<element> *elements) {
 		for (std::vector<int>::iterator it = e->lowerCover.begin(); 
 				 it != e->lowerCover.end(); ++it) {
 			element *e2 = &(*elements)[*it];
-			e2->upperLex.insert(e2->upperLex.begin(), e->key);
+			e2->upperLex.insert(e2->upperLex.begin(), e->lex);
 			if (!e2->touched) {
 				e2->touched = true;
 				count --;
@@ -52,5 +52,7 @@ void lexLabel(vector<element> *elements) {
 		}
 
 	}
+
+	dump(*elements);
 
 }	
