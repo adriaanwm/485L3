@@ -9,6 +9,7 @@
 #include <vector>
 #include <stdlib.h>
 #include <time.h>
+#include <ctime>
 
 #include "maxheap.h"
 #include "element.h"
@@ -30,10 +31,12 @@ int main(int argc, char *argv[]) {
 
 	vector<element> elements;
 	
+	time_t start = time(nullptr);	
 	if (!getPosetInfo(argv[1], &elements)) { return 0; }
 	lexLabel(&elements);
   bump(&elements); 	
-
+	time_t end = time(nullptr);	
+	cout << end - start << endl;
 
   return 0;
 }
