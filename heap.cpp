@@ -63,7 +63,7 @@ int main(int argc, char const *argv[])
 
 	while (!minHeap.empty()) {
     std::vector<int> vec = minHeap.top();
-    dump(vec);
+    // dump(vec);
 		minHeap.pop();
 	}
 	return 0;

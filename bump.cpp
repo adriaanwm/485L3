@@ -31,12 +31,12 @@ int main(int argc, char *argv[]) {
 
 	vector<element> elements;
 	
-	time_t start = time(nullptr);	
 	if (!getPosetInfo(argv[1], &elements)) { return 0; }
+	clock_t start;
 	lexLabel(&elements);
+	start = clock();
   bump(&elements); 	
-	time_t end = time(nullptr);	
-	cout << end - start << endl;
+	cout << "Time: " << (clock() - start) / (double(CLOCKS_PER_SEC/1000)) << endl;
 
   return 0;
 }

@@ -53,6 +53,6 @@ void lexLabel(vector<element> *elements) {
 
 	}
 
-	dump(*elements);
+	// dump(*elements);
 
 }	
